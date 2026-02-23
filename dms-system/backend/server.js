@@ -18,7 +18,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // ✅ USE CORS ONLY ONCE
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://dms-soe.vercel.app",
     credentials: true,
   })
 );
