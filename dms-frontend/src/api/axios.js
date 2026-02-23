@@ -1,6 +1,7 @@
+/* eslint-disable no-undef */
 import axios from "axios";
 
-const instance = axios.create({
+export default axios.create({
   baseURL: "https://dms-soe-production.up.railway.app",
 });
 
@@ -12,4 +13,3 @@ instance.interceptors.request.use((config) => {
   return config;
 });
 
-export default instance;
