@@ -3,7 +3,11 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-
+// CORS - SIMPLE PRODUCTION SAFE VERSION
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
