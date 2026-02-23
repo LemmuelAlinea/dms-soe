@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://dms-soe.vercel.app/",
+  baseURL: "https://dms-soe-production.up.railway.app",
 });
 
 api.interceptors.request.use((config) => {
