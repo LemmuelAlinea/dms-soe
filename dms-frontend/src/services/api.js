@@ -2,6 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "https://dms-soe-production.up.railway.app",
+  withCredentials: true
 });
 
 api.interceptors.request.use((config) => {
