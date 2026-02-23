@@ -15,10 +15,26 @@ const swaggerSpec = require("./swagger");
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// ✅ USE CORS ONLY ONCE
+/* ===========================
+   ✅ PROPER PRODUCTION CORS
+=========================== */
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://dms-soe.vercel.app"  // ← IMPORTANT: your Vercel URL
+];
+
 app.use(
   cors({
-    origin: "https://dms-soe-production.up.railway.app",
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // allow non-browser tools
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
@@ -39,11 +55,9 @@ app.use("/api/folders", require("./routes/folders.routes"));
 app.use("/api/documents", require("./routes/documents.routes"));
 app.use("/api/analytics", require("./routes/analytics.routes"));
 app.use("/api/logs", require("./routes/logs.routes"));
+app.use("/api/superadmin", require("./routes/superadmin.routes"));
 
 app.use(require("./middleware/error.middleware"));
-
-//SUPERADMIN
-app.use("/api/superadmin", require("./routes/superadmin.routes"));
 
 app.listen(process.env.PORT, () => {
   console.log("Server running on port " + process.env.PORT);
