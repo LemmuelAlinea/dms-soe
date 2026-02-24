@@ -12,7 +12,7 @@ export default function Logs() {
 
   const fetchLogs = async () => {
     try {
-      const res = await api.get("/logs");
+      const res = await api.get("/api/logs");
       setLogs(res.data);
     } catch (err) {
       console.error(err);

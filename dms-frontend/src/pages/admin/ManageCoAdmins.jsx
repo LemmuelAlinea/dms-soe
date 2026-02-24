@@ -20,7 +20,7 @@ export default function ManageCoAdmins() {
 
   const fetchCoadmins = async () => {
     try {
-      const res = await api.get("/admins");
+      const res = await api.get("/api/admins");
       setCoadmins(res.data);
     } catch (err) {
       console.error(err);
@@ -34,7 +34,7 @@ export default function ManageCoAdmins() {
         return;
       }
 
-      await api.post("/admins", {
+      await api.post("/api/admins", {
         ...form,
         role: "CoAdmin"
       });
@@ -54,7 +54,7 @@ export default function ManageCoAdmins() {
 
   const confirmDelete = async () => {
     try {
-      await api.delete(`/admins/${selectedUser.userID}`);
+      await api.delete(`/api/admins/${selectedUser.userID}`);
       setShowDeleteModal(false);
       setSelectedUser(null);
       fetchCoadmins();

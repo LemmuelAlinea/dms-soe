@@ -12,7 +12,7 @@ export default function RecycleBin() {
 
   const fetchDeleted = async () => {
     try {
-      const res = await api.get("/documents/deleted");
+      const res = await api.get("/api/documents/deleted");
       setDocuments(res.data);
     } catch (err) {
       console.error(err);
@@ -21,7 +21,7 @@ export default function RecycleBin() {
 
   const handleRestore = async (docID) => {
     try {
-      await api.put(`/documents/restore/${docID}`);
+      await api.put(`/api/documents/restore/${docID}`);
       fetchDeleted();
     // eslint-disable-next-line no-unused-vars
     } catch (err) {
@@ -33,7 +33,7 @@ export default function RecycleBin() {
     if (!window.confirm("Permanently delete this file?")) return;
 
     try {
-      await api.delete(`/documents/permanent/${docID}`);
+      await api.delete(`/api/documents/permanent/${docID}`);
       fetchDeleted();
     // eslint-disable-next-line no-unused-vars
     } catch (err) {
