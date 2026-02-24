@@ -1,11 +1,11 @@
 /* eslint-disable no-undef */
 import axios from "axios";
 
-export default axios.create({
+const instance = axios.create({
   baseURL: "https://dms-soe-production.up.railway.app",
 });
 
-axios.interceptors.request.use((config) => {
+instance.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -13,3 +13,4 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
+export default instance;
