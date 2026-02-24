@@ -20,10 +20,10 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const storageRes = await api.get("/analytics/dashboard");
-      const foldersRes = await api.get("/folders");
-      const documentsRes = await api.get("/documents");
-      const logsRes = await api.get("/logs");
+      const storageRes = await api.get("/api/analytics/dashboard");
+      const foldersRes = await api.get("/api/folders");
+      const documentsRes = await api.get("/api/documents");
+      const logsRes = await api.get("/api/logs");
 
       setStorage(storageRes.data);
       setFolders(foldersRes.data);
