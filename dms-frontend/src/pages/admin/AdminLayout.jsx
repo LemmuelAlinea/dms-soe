@@ -11,7 +11,7 @@ export default function AdminLayout() {
 
         <nav className="space-y-4 text-sm">
           <Link
-            to="/admin/dashboard"
+            to="/api/admin/dashboard"
             className="flex items-center gap-2 hover:text-blue-600"
           >
             <LayoutDashboard size={16} />
@@ -19,7 +19,7 @@ export default function AdminLayout() {
           </Link>
 
           <Link
-            to="/admin/folders"
+            to="/api/admin/folders"
             className="flex items-center gap-2 hover:text-blue-600"
           >
             <Folder size={16} />
@@ -27,7 +27,7 @@ export default function AdminLayout() {
           </Link>
 
           <Link
-            to="/admin/recycle-bin"
+            to="/api/admin/recycle-bin"
             className="flex items-center gap-2 hover:text-blue-600"
           >
             <Trash2 size={16} />
