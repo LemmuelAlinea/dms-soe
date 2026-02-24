@@ -24,7 +24,7 @@ export default function Departments() {
 
   const fetchDepartments = async () => {
     try {
-      const res = await api.get("/superadmin/departments");
+      const res = await api.get("/api/superadmin/departments");
       setDepartments(res.data);
     } catch (err) {
       console.error(err);
@@ -40,7 +40,7 @@ export default function Departments() {
     }
 
     try {
-      await api.post("/superadmin/departments", {
+      await api.post("/api/superadmin/departments", {
         departmentName: name,
         departmentCode: code,
         storageLimitMB: limit
@@ -61,7 +61,7 @@ export default function Departments() {
   const handleUpdate = async () => {
     try {
       await api.put(
-        `/superadmin/departments/${editingDept.departmentID}`,
+        `/api/superadmin/departments/${editingDept.departmentID}`,
         {
           departmentName: editingDept.departmentName,
           departmentCode: editingDept.departmentCode,
@@ -82,7 +82,7 @@ export default function Departments() {
   const handleDelete = async () => {
     try {
       await api.delete(
-        `/superadmin/departments/${deleteDept.departmentID}`
+        `/api/superadmin/departments/${deleteDept.departmentID}`
       );
 
       setDeleteDept(null);

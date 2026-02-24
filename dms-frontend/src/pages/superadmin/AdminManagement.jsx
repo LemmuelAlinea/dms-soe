@@ -30,7 +30,7 @@ export default function AdminManagement() {
 
   const fetchAdmins = async () => {
     try {
-      const res = await api.get("/superadmin/admins");
+      const res = await api.get("/api/superadmin/admins");
       setAdmins(res.data);
     } catch (err) {
       console.error(err);
@@ -39,7 +39,7 @@ export default function AdminManagement() {
 
   const fetchDepartments = async () => {
     try {
-      const res = await api.get("/superadmin/departments");
+      const res = await api.get("/api/superadmin/departments");
       setDepartments(res.data);
     } catch (err) {
       console.error(err);
@@ -55,7 +55,7 @@ export default function AdminManagement() {
     }
 
     try {
-      await api.post("/superadmin/admins", {
+      await api.post("/api/superadmin/admins", {
         fullName,
         email,
         password,
@@ -79,7 +79,7 @@ export default function AdminManagement() {
   const handleDelete = async () => {
     try {
       await api.delete(
-        `/superadmin/admins/${deleteUser.userID}`
+        `/api/superadmin/admins/${deleteUser.userID}`
       );
 
       setDeleteUser(null);
@@ -100,7 +100,7 @@ export default function AdminManagement() {
 
     try {
       await api.put(
-        `/superadmin/users/reset-password/${resetUser.userID}`,
+        `/api/superadmin/users/reset-password/${resetUser.userID}`,
         { newPassword }
       );
 

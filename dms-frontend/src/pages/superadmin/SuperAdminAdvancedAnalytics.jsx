@@ -26,7 +26,7 @@ export default function SuperAdminAdvancedAnalytics() {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await api.get("/superadmin/analytics/advanced");
+      const res = await api.get("/api/superadmin/analytics/advanced");
 
       // 🔥 Convert storage to MB
       const storageInMB = res.data.storageData.map((dept) => ({

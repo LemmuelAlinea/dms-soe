@@ -14,7 +14,7 @@ export default function CoAdmins() {
 
   const fetchCoAdmins = async () => {
     try {
-      const res = await api.get("/superadmin/coadmins");
+      const res = await api.get("/api/superadmin/coadmins");
       setCoAdmins(res.data);
     } catch (err) {
       console.error(err);
@@ -28,7 +28,7 @@ export default function CoAdmins() {
 
     try {
       await api.put(
-        `/superadmin/users/reset-password/${resetUser.userID}`,
+        `/api/superadmin/users/reset-password/${resetUser.userID}`,
         { newPassword }
       );
 

@@ -12,7 +12,7 @@ export default function ChangePassword() {
     }
 
     try {
-      await api.put("/auth/change-password", {
+      await api.put("/api/auth/change-password", {
         newPassword: password
       });
 

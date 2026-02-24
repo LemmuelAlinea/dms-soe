@@ -50,7 +50,7 @@ export default function GlobalLogs() {
 
   const fetchDepartments = async () => {
     try {
-      const res = await api.get("/superadmin/departments");
+      const res = await api.get("/api/superadmin/departments");
       setDepartments(res.data);
     } catch (err) {
       console.error(err);
@@ -65,7 +65,7 @@ export default function GlobalLogs() {
         limit: 15
       }).toString();
 
-      const res = await api.get(`/superadmin/logs?${query}`);
+      const res = await api.get(`/api/superadmin/logs?${query}`);
       setLogs(res.data.data);
       setPagination(res.data.pagination);
     } catch (err) {
