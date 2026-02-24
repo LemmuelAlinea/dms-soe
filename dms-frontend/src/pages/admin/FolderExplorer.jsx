@@ -22,7 +22,7 @@ export default function FolderExplorer() {
 
   const fetchFolders = async () => {
     try {
-      const res = await api.get("/folders");
+      const res = await api.get("/api/folders");
       setFolders(res.data);
     } catch (err) {
       console.error(err);
@@ -31,7 +31,7 @@ export default function FolderExplorer() {
 
   const fetchDocuments = async (folderID) => {
     try {
-      const res = await api.get("/documents");
+      const res = await api.get("/api/documents");
       const filtered = res.data.filter(
         (doc) => doc.folderID === folderID
       );
@@ -53,7 +53,7 @@ export default function FolderExplorer() {
         return;
       }
 
-      await api.post("/folders", {
+      await api.post("/api/folders", {
         folderName: newFolderName,
         parentFolderID: selectedFolder
           ? selectedFolder.folderID
@@ -78,7 +78,7 @@ export default function FolderExplorer() {
       formData.append("file", file);
       formData.append("folderID", selectedFolder.folderID);
 
-      const res = await api.post("/documents", formData, {
+      const res = await api.post("/api/documents", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -92,7 +92,7 @@ export default function FolderExplorer() {
 
   const handleDelete = async (docID) => {
     try {
-      await api.delete(`/documents/${docID}`);
+      await api.delete(`/api/documents/${docID}`);
       fetchDocuments(selectedFolder.folderID);
     } catch (err) {
       console.error(err);
@@ -101,7 +101,7 @@ export default function FolderExplorer() {
 
   const handlePreview = async (docID) => {
     try {
-      const res = await api.get(`/documents/preview/${docID}`, {
+      const res = await api.get(`/api/documents/preview/${docID}`, {
         responseType: "blob",
       });
 
