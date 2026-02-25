@@ -34,9 +34,7 @@ export default function AppRoutes() {
         <Route path="/superadmin/advanced-analytics" element={<SuperAdminAdvancedAnalytics />} />
 
         <Route path="/coadmin" element={<CoAdminDashboard />} />
-        <Route path="/coadmin/folders" element={<CoAdminFolders />} />
-        <Route path="/coadmin/logs" element={<CoAdminLogs />} />
-        <Route path="/coadmin/recycle-bin" element={<CoAdminRecycleBin />} />
+        
 
         <Route path="/change-password" element={<ChangePassword />} />
       </Route>
