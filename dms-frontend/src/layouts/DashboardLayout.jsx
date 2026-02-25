@@ -149,13 +149,39 @@ const isActive = (path) => {
 
           {/* ================= COADMIN ================= */}
           {user?.role === "CoAdmin" && (
-            <button
-              onClick={() => navigate("/coadmin")}
-              className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg transition ${isActive("/coadmin")}`}
-            >
-              <LayoutDashboard size={16} />
-              Dashboard
-            </button>
+            <>
+              <button
+                onClick={() => navigate("/coadmin")}
+                className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg transition ${isActive("/coadmin")}`}
+              >
+                <LayoutDashboard size={16} />
+                Dashboard
+              </button>
+
+              <button
+                onClick={() => navigate("/coadmin/folders")}
+                className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg transition ${isActive("/coadmin/folders")}`}
+              >
+                <Folder size={16} />
+                Folder Explorer
+              </button>
+
+              <button
+                onClick={() => navigate("/coadmin/logs")}
+                className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg transition ${isActive("/coadmin/logs")}`}
+              >
+                <Activity size={16} />
+                Activity Logs
+              </button>
+
+              <button
+                onClick={() => navigate("/coadmin/recycle-bin")}
+                className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg transition ${isActive("/coadmin/recycle-bin")}`}
+              >
+                <Trash2 size={16} />
+                Recycle Bin
+              </button>
+            </>
           )}
 
         </nav>
