@@ -470,7 +470,6 @@ exports.getDeletedDocuments = async (req, res) => {
   }
 };
 
-
 exports.permanentDeleteDocument = async (req, res) => {
   try {
     const { documentID } = req.params;
@@ -485,6 +484,13 @@ exports.permanentDeleteDocument = async (req, res) => {
       return res.status(404).json({ message: "Document not found in recycle bin" });
     }
 
+    // 🔥 DELETE VERSIONS FIRST
+    await db.query(
+      "DELETE FROM document_versions WHERE documentID = ?",
+      [documentID]
+    );
+
+    // 🔥 THEN DELETE DOCUMENT
     await db.query(
       "DELETE FROM documents WHERE documentID = ?",
       [documentID]
@@ -493,7 +499,7 @@ exports.permanentDeleteDocument = async (req, res) => {
     res.json({ message: "Document permanently deleted" });
 
   } catch (err) {
-    console.error(err);
+    console.error("Permanent delete error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
