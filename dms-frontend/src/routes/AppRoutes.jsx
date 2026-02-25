@@ -25,7 +25,7 @@ export default function AppRoutes() {
         <Route path="/admin/folders" element={<FolderExplorer />} />
         <Route path="/admin/recycle-bin" element={<RecycleBin />} />
         <Route path="/admin/logs" element={<Logs />} />
-        <Route path="/admin/coadmins" element={<ManageCoAdmins />} />
+        <Route path="/admin/coadmins" element={<ManageCoAdmins />} /> 
         <Route path="/superadmin" element={<SuperAdminDashboard />} />
         <Route path="/superadmin/departments" element={<Departments />} />
         <Route path="/superadmin/admins" element={<AdminManagement />} />
