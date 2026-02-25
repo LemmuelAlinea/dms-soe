@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import api from "../../api/axios";
-import {
-  FolderPlus,
-  Pencil,
-  Trash2,
-  Upload
-} from "lucide-react";
+import api from "../../services/api";
+import DocumentTable from "../../components/DocumentTable";
+import VersionModal from "../../components/VersionModal";
+import FolderTree from "../../components/FolderTree";
 
-export default function CoAdminFolders() {
+export default function FolderExplorer() {
   const [folders, setFolders] = useState([]);
-  const [folderName, setFolderName] = useState("");
-  const [editingFolder, setEditingFolder] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  const [file, setFile] = useState(null);
+  const [search, setSearch] = useState("");
+  const [newFolderName, setNewFolderName] = useState("");
 
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [selectedFolderID, setSelectedFolderID] = useState("");
+  const [showVersionModal, setShowVersionModal] = useState(false);
+  const [selectedVersionDoc, setSelectedVersionDoc] = useState(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/immutability
@@ -29,176 +29,258 @@ export default function CoAdminFolders() {
     }
   };
 
-  const createFolder = async () => {
-    if (!folderName) return;
-
+  const fetchDocuments = async (folderID) => {
     try {
-      await api.post("/api/folders", { folderName });
-      setFolderName("");
-      fetchFolders();
+      const res = await api.get("/api/documents");
+      const filtered = res.data.filter(
+        (doc) => doc.folderID === folderID
+      );
+      setDocuments(filtered);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const renameFolder = async () => {
-    try {
-      await api.put(`/api/folders/${editingFolder.folderID}`, {
-        folderName: editingFolder.folderName,
-      });
-      setEditingFolder(null);
-      fetchFolders();
-    } catch (err) {
-      console.error(err);
-    }
+  const handleFolderClick = (folder) => {
+    setSelectedFolder(folder);
+    fetchDocuments(folder.folderID);
   };
 
-  const deleteFolder = async (folderID) => {
-    if (!window.confirm("Delete this folder?")) return;
-
+  const handleCreateFolder = async () => {
     try {
-      await api.delete(`/api/folders/${folderID}`);
-      fetchFolders();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      if (!newFolderName.trim()) {
+        alert("Folder name required");
+        return;
+      }
 
-  const uploadDocument = async () => {
-    if (!selectedFile || !selectedFolderID) {
-      alert("Select file and folder first");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    formData.append("folderID", selectedFolderID);
-
-    try {
-      await api.post("/api/documents", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      await api.post("/api/folders", {
+        folderName: newFolderName,
+        parentFolderID: selectedFolder
+          ? selectedFolder.folderID
+          : null,
       });
 
-      alert("Upload successful");
-      setSelectedFile(null);
-      setSelectedFolderID("");
+      setNewFolderName("");
+      fetchFolders();
     } catch (err) {
-      console.error(err);
-      alert("Upload failed");
+      alert(err.response?.data?.message || "Failed to create folder");
     }
   };
+
+  const handleUpload = async () => {
+    try {
+      if (!file || !selectedFolder) {
+        alert("Select file and folder first");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folderID", selectedFolder.folderID);
+
+      const res = await api.post("/api/documents", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert(res.data.message);
+      setFile(null);
+      fetchDocuments(selectedFolder.folderID);
+    } catch (err) {
+      alert(err.response?.data?.message || "Upload failed");
+    }
+  };
+
+  const handleDelete = async (docID) => {
+    try {
+      await api.delete(`/api/documents/${docID}`);
+      fetchDocuments(selectedFolder.folderID);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handlePreview = async (docID) => {
+    try {
+      const res = await api.get(`/api/documents/preview/${docID}`, {
+        responseType: "blob",
+      });
+
+      const fileBlob = new Blob([res.data], {
+        type: "application/pdf",
+      });
+
+      const fileURL = URL.createObjectURL(fileBlob);
+      window.open(fileURL);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const buildBreadcrumb = () => {
+    if (!selectedFolder) return [];
+
+    const path = [];
+    let current = selectedFolder;
+
+    while (current) {
+      path.unshift(current);
+      current = folders.find(
+        (f) => f.folderID === current.parentFolderID
+      );
+    }
+
+    return path;
+  };
+
+  const filteredDocs = documents.filter((doc) =>
+    doc.fileName.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="space-y-10">
+    <>
+      <div className="min-h-[85vh] p-6">
 
-      <h1 className="text-2xl font-semibold text-gray-800">
-        Folder Explorer
-      </h1>
+        {/* Page Title */}
+        <h1 className="text-2xl font-bold mb-6">
+          Document Management
+        </h1>
 
-      {/* CREATE FOLDER */}
-      <div className="bg-white p-6 rounded-2xl shadow space-y-4">
-        <div className="flex gap-4">
-          <input
-            type="text"
-            placeholder="Folder Name"
-            value={folderName}
-            onChange={(e) => setFolderName(e.target.value)}
-            className="flex-1 border p-3 rounded-lg"
-          />
-          <button
-            onClick={createFolder}
-            className="bg-[#0F172A] text-white px-6 rounded-lg flex items-center gap-2"
-          >
-            <FolderPlus size={16} />
-            Create
-          </button>
+        <div className="flex gap-6">
+
+          {/* Folder Panel */}
+          <div className="w-1/3 bg-white rounded-2xl shadow-md p-6">
+            <h2 className="text-lg font-semibold mb-4">
+              Folders
+            </h2>
+
+            {/* Create Folder */}
+            <div className="mb-4 space-y-2">
+              <input
+                type="text"
+                placeholder={
+                  selectedFolder
+                    ? `Create inside ${selectedFolder.folderName}`
+                    : "Create root folder"
+                }
+                value={newFolderName}
+                onChange={(e) =>
+                  setNewFolderName(e.target.value)
+                }
+                className="w-full border p-2 rounded-lg text-sm"
+              />
+
+              <button
+                onClick={handleCreateFolder}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm transition"
+              >
+                Create Folder
+              </button>
+            </div>
+
+            {/* Folder Tree */}
+            <FolderTree
+              folders={folders}
+              onSelectFolder={handleFolderClick}
+              activeFolderID={selectedFolder?.folderID}
+              refreshFolders={fetchFolders}
+            />
+          </div>
+
+          {/* Document Panel */}
+          <div className="flex-1 bg-white rounded-2xl shadow-md p-6">
+
+            {/* Breadcrumb */}
+            <div className="mb-4">
+              {selectedFolder ? (
+                <div className="text-sm text-gray-500 flex flex-wrap gap-2 items-center">
+                  <span className="font-medium">
+                    Dashboard
+                  </span>
+
+                  {buildBreadcrumb().map((folder) => (
+                    <span
+                      key={folder.folderID}
+                      className="flex items-center gap-2"
+                    >
+                      <span>&gt;</span>
+                      <span
+                        onClick={() =>
+                          handleFolderClick(folder)
+                        }
+                        className="cursor-pointer hover:underline text-blue-600"
+                      >
+                        {folder.folderName}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">
+                  Select a folder to view documents
+                </p>
+              )}
+            </div>
+
+            {/* Upload & Search */}
+            {selectedFolder && (
+              <div className="mb-6 flex gap-4 items-center">
+                <input
+                  type="file"
+                  onChange={(e) =>
+                    setFile(e.target.files[0])
+                  }
+                  className="text-sm"
+                />
+
+                <button
+                  onClick={handleUpload}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition"
+                >
+                  Upload
+                </button>
+
+                <input
+                  type="text"
+                  placeholder="Search file..."
+                  className="border p-2 rounded-lg text-sm flex-1"
+                  value={search}
+                  onChange={(e) =>
+                    setSearch(e.target.value)
+                  }
+                />
+              </div>
+            )}
+
+            {/* Documents Table */}
+            <DocumentTable
+              documents={filteredDocs}
+              onPreview={handlePreview}
+              onDelete={handleDelete}
+              onVersions={(id) => {
+                setSelectedVersionDoc(id);
+                setShowVersionModal(true);
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* UPLOAD DOCUMENT */}
-      <div className="bg-white p-6 rounded-2xl shadow space-y-4">
-        <h2 className="text-lg font-semibold">Upload Document</h2>
-
-        <select
-          value={selectedFolderID}
-          onChange={(e) => setSelectedFolderID(e.target.value)}
-          className="w-full border p-3 rounded-lg"
-        >
-          <option value="">Select Folder</option>
-          {folders.map((folder) => (
-            <option key={folder.folderID} value={folder.folderID}>
-              {folder.folderName}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="file"
-          onChange={(e) => setSelectedFile(e.target.files[0])}
-          className="w-full"
+      {/* Version Modal */}
+      {showVersionModal && (
+        <VersionModal
+          documentID={selectedVersionDoc}
+          onClose={() =>
+            setShowVersionModal(false)
+          }
+          onRestoreSuccess={() => {
+            if (selectedFolder) {
+              fetchDocuments(
+                selectedFolder.folderID
+              );
+            }
+          }}
         />
-
-        <button
-          onClick={uploadDocument}
-          className="bg-[#0F172A] text-white px-6 py-2 rounded-lg flex items-center gap-2"
-        >
-          <Upload size={16} />
-          Upload
-        </button>
-      </div>
-
-      {/* FOLDER LIST */}
-      <div className="bg-white p-6 rounded-2xl shadow space-y-4">
-        {folders.map((folder) => (
-          <div
-            key={folder.folderID}
-            className="flex justify-between items-center border-b pb-2"
-          >
-            {editingFolder?.folderID === folder.folderID ? (
-              <>
-                <input
-                  value={editingFolder.folderName}
-                  onChange={(e) =>
-                    setEditingFolder({
-                      ...editingFolder,
-                      folderName: e.target.value,
-                    })
-                  }
-                  className="border p-2 rounded"
-                />
-                <button
-                  onClick={renameFolder}
-                  className="text-blue-600"
-                >
-                  Save
-                </button>
-              </>
-            ) : (
-              <>
-                <span>{folder.folderName}</span>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setEditingFolder(folder)}
-                    className="text-blue-600"
-                  >
-                    <Pencil size={16} />
-                  </button>
-
-                  <button
-                    onClick={() => deleteFolder(folder.folderID)}
-                    className="text-red-600"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-
-    </div>
+      )}
+    </>
   );
 }

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import api from "../../api/axios";
-import { Trash2 } from "lucide-react";
+import api from "../../services/api";
+import { Trash2, RotateCcw } from "lucide-react";
 
-export default function CoAdminRecycleBin() {
+export default function RecycleBin() {
   const [documents, setDocuments] = useState([]);
 
   useEffect(() => {
@@ -12,57 +12,80 @@ export default function CoAdminRecycleBin() {
 
   const fetchDeleted = async () => {
     try {
-      const res = await api.get("/api/documents?deleted=true");
+      const res = await api.get("/api/documents/deleted");
       setDocuments(res.data);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const permanentlyDelete = async (documentID) => {
-    if (!window.confirm("Permanently delete this document?")) return;
+  const handleRestore = async (docID) => {
+    try {
+      await api.put(`/api/documents/restore/${docID}`);
+      fetchDeleted();
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      alert("Restore failed");
+    }
+  };
+
+  const handlePermanentDelete = async (docID) => {
+    if (!window.confirm("Permanently delete this file?")) return;
 
     try {
-      await api.delete(`/api/documents/permanent/${documentID}`);
+      await api.delete(`/api/documents/permanent/${docID}`);
       fetchDeleted();
+    // eslint-disable-next-line no-unused-vars
     } catch (err) {
-      console.error(err);
       alert("Delete failed");
     }
   };
 
   return (
-    <div className="space-y-8">
+    <div className="p-6 min-h-[85vh]">
+      <h1 className="text-2xl font-bold mb-6">Recycle Bin</h1>
 
-      <h1 className="text-2xl font-semibold text-gray-800">
-        Recycle Bin
-      </h1>
-
-      <div className="bg-white p-6 rounded-2xl shadow space-y-4">
+      <div className="bg-white rounded-2xl shadow-md p-6">
         {documents.length === 0 ? (
-          <p className="text-gray-500 text-sm">
-            No deleted documents.
-          </p>
+          <p className="text-gray-500">Recycle bin is empty.</p>
         ) : (
-          documents.map((doc) => (
-            <div
-              key={doc.documentID}
-              className="flex justify-between items-center border-b pb-2"
-            >
-              <span>{doc.fileName}</span>
+          <table className="w-full text-sm">
+            <thead className="bg-gray-100 text-xs uppercase text-gray-600">
+              <tr>
+                <th className="p-3 text-left">File</th>
+                <th className="p-3 text-left">Deleted At</th>
+                <th className="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
 
-              <button
-                onClick={() => permanentlyDelete(doc.documentID)}
-                className="text-red-600 flex items-center gap-2"
-              >
-                <Trash2 size={16} />
-                Permanently Delete
-              </button>
-            </div>
-          ))
+            <tbody>
+              {documents.map((doc) => (
+                <tr key={doc.documentID} className="border-b">
+                  <td className="p-3">📄 {doc.fileName}</td>
+                  <td className="p-3">
+                    {new Date(doc.deletedAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-3 flex justify-end gap-4">
+                    <button
+                      onClick={() => handleRestore(doc.documentID)}
+                      className="text-green-600 hover:scale-110 transition"
+                    >
+                      <RotateCcw size={16} />
+                    </button>
+
+                    <button
+                      onClick={() => handlePermanentDelete(doc.documentID)}
+                      className="text-red-600 hover:scale-110 transition"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
-
     </div>
   );
 }
