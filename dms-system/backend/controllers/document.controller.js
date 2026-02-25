@@ -470,6 +470,21 @@ exports.getDeletedDocuments = async (req, res) => {
   }
 };
 
+exports.getDeletedDocuments = async (req, res) => {
+  try {
+    const departmentID = req.user.departmentID;
+
+    const [documents] = await db.query(
+      "SELECT * FROM documents WHERE isDeleted = TRUE ORDER BY deletedAt DESC"
+    );
+
+    res.json(documents);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 exports.permanentDeleteDocument = async (req, res) => {
   try {
