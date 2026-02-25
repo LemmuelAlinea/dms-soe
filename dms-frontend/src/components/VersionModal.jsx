@@ -18,7 +18,7 @@ export default function VersionModal({
 
   const fetchVersions = async () => {
     try {
-      const res = await api.get(`/documents/versions/${documentID}`);
+      const res = await api.get(`/api/documents/versions/${documentID}`);
       setVersions(res.data);
     } catch (err) {
       console.error(err);
@@ -32,7 +32,7 @@ export default function VersionModal({
     formData.append("file", file);
 
     try {
-      await api.put(`/documents/version/${documentID}`, formData);
+      await api.put(`/api/documents/version/${documentID}`, formData);
       setFile(null);
       fetchVersions();
       alert("New version uploaded");
@@ -44,7 +44,7 @@ export default function VersionModal({
 
   const handleRestore = async (versionID) => {
     try {
-      await api.put(`/documents/versions/restore/${versionID}`);
+      await api.put(`/api/documents/versions/restore/${versionID}`);
       fetchVersions();
       onRestoreSuccess();
       alert("Version restored");

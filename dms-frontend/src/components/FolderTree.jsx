@@ -22,7 +22,7 @@ export default function FolderTree({
 
   const handleRename = async (folderID) => {
     try {
-      await api.put(`/folders/${folderID}`, {
+      await api.put(`/api/folders/${folderID}`, {
         folderName: newName
       });
 
