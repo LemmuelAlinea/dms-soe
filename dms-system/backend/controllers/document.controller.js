@@ -233,6 +233,8 @@ exports.searchDocuments = async (req, res) => {
 };
 
 exports.uploadNewVersion = async (req, res) => {
+  const connection = await db.getConnection();
+
   try {
     const { documentID } = req.params;
     const departmentID = req.user.departmentID;
@@ -242,66 +244,54 @@ exports.uploadNewVersion = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // 1️⃣ Validate document
-    const [docRows] = await db.query(
+    await connection.beginTransaction();
+
+    const [docRows] = await connection.query(
       "SELECT * FROM documents WHERE documentID = ? AND departmentID = ? AND isDeleted = FALSE",
       [documentID, departmentID]
     );
 
     if (docRows.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: "Document not found" });
     }
 
     const currentDoc = docRows[0];
 
-    // 2️⃣ Get latest version number safely
-    const [[versionData]] = await db.query(
-      "SELECT IFNULL(MAX(versionNumber), 0) as maxVersion FROM document_versions WHERE documentID = ?",
-      [documentID]
-    );
-
-    const newVersionNumber = versionData.maxVersion + 1;
-
-    // 3️⃣ Save previous file as version
-    await db.query(
+    await connection.query(
       `INSERT INTO document_versions 
-       (documentID, filePath, fileSize, uploadedBy, versionNumber)
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        documentID,
-        currentDoc.filePath,
-        currentDoc.fileSize,
-        userID,
-        newVersionNumber
-      ]
+       (documentID, filePath, fileSize, uploadedBy)
+       VALUES (?, ?, ?, ?)`,
+      [documentID, currentDoc.filePath, currentDoc.fileSize, userID]
     );
 
-    // 4️⃣ Replace main document
-    await db.query(
+    await connection.query(
       `UPDATE documents 
-       SET filePath = ?, fileSize = ?, fileName = ?, updatedAt = NOW()
+       SET filePath = ?, fileSize = ?, fileName = ?
        WHERE documentID = ?`,
       [req.file.filename, req.file.size, req.file.originalname, documentID]
     );
 
-    // 5️⃣ 🔥 LOG ACTIVITY
+    await connection.commit();
+
+    // ✅ LOG HERE
     await logger.logActivity({
       userID,
       departmentID,
       actionType: "UPDATE_VERSION",
       targetType: "Document",
       targetID: documentID,
-      description: `Uploaded Version ${newVersionNumber} for document "${currentDoc.fileName}"`,
+      description: `Uploaded new version for document ID ${documentID}`,
     });
 
-    res.json({
-      message: `Version ${newVersionNumber} uploaded successfully`,
-      versionNumber: newVersionNumber
-    });
+    res.json({ message: "New version uploaded successfully" });
 
   } catch (err) {
-    console.error("UPLOAD VERSION ERROR:", err);
+    await connection.rollback();
+    console.error(err);
     res.status(500).json({ message: "Server error" });
+  } finally {
+    connection.release();
   }
 };
 
