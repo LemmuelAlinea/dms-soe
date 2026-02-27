@@ -242,6 +242,7 @@ exports.uploadNewVersion = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
+    // 1️⃣ Validate document
     const [docRows] = await db.query(
       "SELECT * FROM documents WHERE documentID = ? AND departmentID = ? AND isDeleted = FALSE",
       [documentID, departmentID]
@@ -253,6 +254,15 @@ exports.uploadNewVersion = async (req, res) => {
 
     const currentDoc = docRows[0];
 
+    // 2️⃣ Get latest version number safely
+    const [[versionData]] = await db.query(
+      "SELECT IFNULL(MAX(versionNumber), 0) as maxVersion FROM document_versions WHERE documentID = ?",
+      [documentID]
+    );
+
+    const newVersionNumber = versionData.maxVersion + 1;
+
+    // 3️⃣ Save previous file as version
     await db.query(
       `INSERT INTO document_versions 
        (documentID, filePath, fileSize, uploadedBy, versionNumber)
@@ -262,22 +272,36 @@ exports.uploadNewVersion = async (req, res) => {
         currentDoc.filePath,
         currentDoc.fileSize,
         userID,
-        1 // temporary static test
+        newVersionNumber
       ]
     );
 
+    // 4️⃣ Replace main document
     await db.query(
       `UPDATE documents 
-       SET filePath = ?, fileSize = ?, fileName = ?
+       SET filePath = ?, fileSize = ?, fileName = ?, updatedAt = NOW()
        WHERE documentID = ?`,
       [req.file.filename, req.file.size, req.file.originalname, documentID]
     );
 
-    res.json({ message: "New version uploaded successfully" });
+    // 5️⃣ 🔥 LOG ACTIVITY
+    await logger.logActivity({
+      userID,
+      departmentID,
+      actionType: "UPDATE_VERSION",
+      targetType: "Document",
+      targetID: documentID,
+      description: `Uploaded Version ${newVersionNumber} for document "${currentDoc.fileName}"`,
+    });
+
+    res.json({
+      message: `Version ${newVersionNumber} uploaded successfully`,
+      versionNumber: newVersionNumber
+    });
 
   } catch (err) {
     console.error("UPLOAD VERSION ERROR:", err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
