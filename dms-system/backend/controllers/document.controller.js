@@ -129,6 +129,15 @@ exports.softDeleteDocument = async (req, res) => {
       [userID, documentID]
     );
 
+    await logger.logActivity({
+      userID,
+      departmentID,
+      actionType: "DELETE",
+      targetType: "Document",
+      targetID: documentID,
+      description: `Soft deleted document ID ${documentID}`,
+    });
+
     res.json({ message: "Document soft deleted successfully" });
   } catch (err) {
     console.error(err);
@@ -265,6 +274,16 @@ exports.uploadNewVersion = async (req, res) => {
 
     await connection.commit();
 
+    // ✅ LOG HERE
+    await logger.logActivity({
+      userID,
+      departmentID,
+      actionType: "UPDATE_VERSION",
+      targetType: "Document",
+      targetID: documentID,
+      description: `Uploaded new version for document ID ${documentID}`,
+    });
+
     res.json({ message: "New version uploaded successfully" });
 
   } catch (err) {
@@ -361,6 +380,15 @@ exports.restoreVersion = async (req, res) => {
         version.documentID
       ]
     );
+
+    await logger.logActivity({
+      userID,
+      departmentID,
+      actionType: "RESTORE_VERSION",
+      targetType: "Document",
+      targetID: version.documentID,
+      description: `Restored version ID ${versionID}`,
+    });
 
     res.json({ message: "Version restored successfully" });
 
@@ -474,6 +502,7 @@ exports.permanentDeleteDocument = async (req, res) => {
   try {
     const { documentID } = req.params;
     const departmentID = req.user.departmentID;
+    const userID = req.user.userID;
 
     const [doc] = await db.query(
       "SELECT * FROM documents WHERE documentID = ? AND departmentID = ? AND isDeleted = TRUE",
@@ -484,17 +513,24 @@ exports.permanentDeleteDocument = async (req, res) => {
       return res.status(404).json({ message: "Document not found in recycle bin" });
     }
 
-    // 🔥 DELETE VERSIONS FIRST
     await db.query(
       "DELETE FROM document_versions WHERE documentID = ?",
       [documentID]
     );
 
-    // 🔥 THEN DELETE DOCUMENT
     await db.query(
       "DELETE FROM documents WHERE documentID = ?",
       [documentID]
     );
+
+    await logger.logActivity({
+      userID,
+      departmentID,
+      actionType: "PERMANENT_DELETE",
+      targetType: "Document",
+      targetID: documentID,
+      description: `Permanently deleted document ID ${documentID}`,
+    });
 
     res.json({ message: "Document permanently deleted" });
 
