@@ -233,8 +233,6 @@ exports.searchDocuments = async (req, res) => {
 };
 
 exports.uploadNewVersion = async (req, res) => {
-  const connection = await db.getConnection();
-
   try {
     const { documentID } = req.params;
     const departmentID = req.user.departmentID;
@@ -244,54 +242,42 @@ exports.uploadNewVersion = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    await connection.beginTransaction();
-
-    const [docRows] = await connection.query(
+    const [docRows] = await db.query(
       "SELECT * FROM documents WHERE documentID = ? AND departmentID = ? AND isDeleted = FALSE",
       [documentID, departmentID]
     );
 
     if (docRows.length === 0) {
-      await connection.rollback();
       return res.status(404).json({ message: "Document not found" });
     }
 
     const currentDoc = docRows[0];
 
-    await connection.query(
+    await db.query(
       `INSERT INTO document_versions 
-       (documentID, filePath, fileSize, uploadedBy)
-       VALUES (?, ?, ?, ?)`,
-      [documentID, currentDoc.filePath, currentDoc.fileSize, userID]
+       (documentID, filePath, fileSize, uploadedBy, versionNumber)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        documentID,
+        currentDoc.filePath,
+        currentDoc.fileSize,
+        userID,
+        1 // temporary static test
+      ]
     );
 
-    await connection.query(
+    await db.query(
       `UPDATE documents 
        SET filePath = ?, fileSize = ?, fileName = ?
        WHERE documentID = ?`,
       [req.file.filename, req.file.size, req.file.originalname, documentID]
     );
 
-    await connection.commit();
-
-    // ✅ LOG HERE
-    await logger.logActivity({
-      userID,
-      departmentID,
-      actionType: "UPDATE_VERSION",
-      targetType: "Document",
-      targetID: documentID,
-      description: `Uploaded new version for document ID ${documentID}`,
-    });
-
     res.json({ message: "New version uploaded successfully" });
 
   } catch (err) {
-    await connection.rollback();
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  } finally {
-    connection.release();
+    console.error("UPLOAD VERSION ERROR:", err);
+    res.status(500).json({ message: err.message });
   }
 };
 
