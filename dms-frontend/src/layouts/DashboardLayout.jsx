@@ -89,7 +89,7 @@ const isActive = (path) => {
   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-[#1E293B] transition"
 >
   <BarChart3 size={16} />
-  Advanced Analytics
+  Analytics
 </button>
             </>
           )}
