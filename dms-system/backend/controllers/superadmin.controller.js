@@ -283,7 +283,7 @@ exports.deleteAdmin = async (req, res) => {
     }
 
     await db.query(
-      "DELETE FROM users WHERE userID = ? AND role = 'Admin'",
+      "DELETE FROM users WHERE userID = ?",
       [userID]
     );
 
