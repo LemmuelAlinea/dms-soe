@@ -67,12 +67,6 @@ router.put(
   superadminController.resetUserPassword
 );
 
-router.get(
-  "/coadmins",
-  auth,
-  role(["SuperAdmin"]),
-  superadminController.getAllCoAdmins
-);
 
 router.get(
   "/logs",

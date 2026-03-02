@@ -343,29 +343,6 @@ exports.resetUserPassword = async (req, res) => {
   }
 };
 
-exports.getAllCoAdmins = async (req, res) => {
-  try {
-    if (req.user.role !== "SuperAdmin") {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    const [coadmins] = await db.query(
-      `SELECT u.userID, u.fullName, u.email, u.createdAt,
-              d.departmentName
-       FROM users u
-       LEFT JOIN departments d
-         ON u.departmentID = d.departmentID
-       WHERE u.role = 'CoAdmin'
-       ORDER BY u.createdAt DESC`
-    );
-
-    res.json(coadmins);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
 
 exports.getGlobalLogs = async (req, res) => {
   try {
