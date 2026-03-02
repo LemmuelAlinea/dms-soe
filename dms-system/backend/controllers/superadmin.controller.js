@@ -282,15 +282,19 @@ exports.deleteAdmin = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    await db.query(
-      "DELETE FROM users WHERE userID = ?",
+    const [result] = await db.query(
+      "UPDATE users SET isDeleted = TRUE WHERE userID = ? AND role = 'Admin'",
       [userID]
     );
 
-    res.json({ message: "Admin deleted successfully" });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    res.json({ message: "Admin soft deleted successfully" });
 
   } catch (err) {
-    console.error(err);
+    console.error("SOFT DELETE ADMIN ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

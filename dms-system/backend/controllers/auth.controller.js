@@ -7,7 +7,7 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     const [rows] = await db.query(
-      "SELECT * FROM users WHERE email = ?",
+      "SELECT * FROM users WHERE email = ? AND isDeleted = FALSE",
       [email]
     );
 
