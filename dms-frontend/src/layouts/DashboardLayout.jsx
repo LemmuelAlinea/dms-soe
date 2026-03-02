@@ -77,14 +77,6 @@ const isActive = (path) => {
               </button>
 
               <button
-                onClick={() => navigate("/superadmin/coadmins")}
-                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-[#1E293B] transition"
-              >
-                <Users size={16} />
-                Co Admins
-              </button>
-
-              <button
                 onClick={() => navigate("/superadmin/logs")}
                 className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-[#1E293B] transition"
               >
