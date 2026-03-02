@@ -226,6 +226,7 @@ exports.getAdmins = async (req, res) => {
       LEFT JOIN departments d 
         ON u.departmentID = d.departmentID
       WHERE u.role = 'Admin'
+      AND u.isDeleted = FALSE
     `);
 
     res.json(admins);
