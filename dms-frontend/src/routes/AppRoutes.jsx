@@ -14,7 +14,6 @@ import ManageCoAdmins from "../pages/admin/ManageCoAdmins";
 import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard";
 import Departments from "../pages/superadmin/Departments";
 import AdminManagement from "../pages/superadmin/AdminManagement";
-import CoAdmins from "../pages/superadmin/CoAdmins";
 import GlobalLogs from "../pages/superadmin/GlobalLogs";
 import SuperAdminAdvancedAnalytics from "../pages/superadmin/SuperAdminAdvancedAnalytics";
 
@@ -45,7 +44,6 @@ export default function AppRoutes() {
         <Route path="/superadmin" element={<SuperAdminDashboard />} />
         <Route path="/superadmin/departments" element={<Departments />} />
         <Route path="/superadmin/admins" element={<AdminManagement />} />
-        <Route path="/superadmin/coadmins" element={<CoAdmins />} />
         <Route path="/superadmin/logs" element={<GlobalLogs />} />
         <Route
           path="/superadmin/advanced-analytics"
