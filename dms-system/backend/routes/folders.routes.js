@@ -33,7 +33,7 @@ router.put(
 );
 
 router.delete(
-  "/:folderID",
+  "/api/folders/:folderID",
   auth,
   role(["Admin", "CoAdmin"]),
   folderController.deleteFolder
