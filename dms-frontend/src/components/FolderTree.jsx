@@ -117,7 +117,7 @@ export default function FolderTree({
                       onClick={async () => {
                         if (!window.confirm("Delete folder?")) return;
                         try {
-                          await api.delete(`/folders/${folder.folderID}`);
+                          await api.delete(`/api/folders/${folder.folderID}`);
                           refreshFolders();
                         } catch (err) {
                           alert(err.response?.data?.message || "Delete failed");
