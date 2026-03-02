@@ -216,7 +216,12 @@ exports.getAdmins = async (req, res) => {
     const [admins] = await db.query(`
       SELECT 
         u.userID,
-        u.fullName,
+        CONCAT(
+          u.firstName,
+          IF(u.middleName IS NOT NULL AND u.middleName != '', CONCAT(' ', u.middleName), ''),
+          ' ',
+          u.lastName
+        ) AS fullName,
         u.email,
         u.role,
         u.departmentID,
@@ -239,18 +244,18 @@ exports.getAdmins = async (req, res) => {
 
 exports.createAdmin = async (req, res) => {
   try {
-    const { fullName, email, password, departmentID } = req.body;
+    const { firstName, middleName, lastName, email, password, departmentID } = req.body;
 
     if (req.user.role !== "SuperAdmin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    if (!fullName || !email || !password || !departmentID) {
-      return res.status(400).json({ message: "All fields required" });
+    if (!firstName || !lastName || !email || !password || !departmentID) {
+      return res.status(400).json({ message: "All required fields missing" });
     }
 
     const [existing] = await db.query(
-      "SELECT * FROM users WHERE email = ?",
+      "SELECT userID FROM users WHERE email = ?",
       [email]
     );
 
@@ -262,15 +267,22 @@ exports.createAdmin = async (req, res) => {
 
     await db.query(
       `INSERT INTO users 
-       (fullName, email, passwordHash, role, departmentID)
-       VALUES (?, ?, ?, 'Admin', ?)`,
-      [fullName, email, hashedPassword, departmentID]
+       (firstName, middleName, lastName, email, passwordHash, role, departmentID)
+       VALUES (?, ?, ?, ?, ?, 'Admin', ?)`,
+      [
+        firstName,
+        middleName || null,
+        lastName,
+        email,
+        hashedPassword,
+        departmentID
+      ]
     );
 
     res.json({ message: "Admin created successfully" });
 
   } catch (err) {
-    console.error(err);
+    console.error("CREATE ADMIN ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -283,14 +295,10 @@ exports.deleteAdmin = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const [result] = await db.query(
+    await db.query(
       "UPDATE users SET isDeleted = TRUE WHERE userID = ? AND role = 'Admin'",
       [userID]
     );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Admin not found" });
-    }
 
     res.json({ message: "Admin deleted successfully" });
 

@@ -9,62 +9,47 @@ const bcrypt = require("bcryptjs");
 
 exports.createAdmin = async (req, res) => {
   try {
-    const { fullName, email, password, role } = req.body;
+    const { firstName, middleName, lastName, email, password } = req.body;
 
-    const creatorRole = req.user.role;
-    const creatorDepartmentID = req.user.departmentID;
-
-    // Only Admin can create CoAdmin
-    if (creatorRole !== "Admin") {
+    if (req.user.role !== "Admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    // Admin can ONLY create CoAdmin
-    if (role !== "CoAdmin") {
-      return res.status(400).json({
-        message: "Admin can only create CoAdmin"
-      });
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ message: "All required fields missing" });
     }
 
-    if (!creatorDepartmentID) {
-      return res.status(400).json({
-        message: "Creator has no department assigned"
-      });
-    }
+    const departmentID = req.user.departmentID;
 
-    // Check if email already exists
     const [existing] = await db.query(
       "SELECT userID FROM users WHERE email = ?",
       [email]
     );
 
     if (existing.length > 0) {
-      return res.status(400).json({
-        message: "Email already exists"
-      });
+      return res.status(400).json({ message: "Email already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.query(
       `INSERT INTO users
-       (fullName, email, passwordHash, role, departmentID)
-       VALUES (?, ?, ?, ?, ?)`,
+       (firstName, middleName, lastName, email, passwordHash, role, departmentID)
+       VALUES (?, ?, ?, ?, ?, 'CoAdmin', ?)`,
       [
-        fullName,
+        firstName,
+        middleName || null,
+        lastName,
         email,
         hashedPassword,
-        "CoAdmin",
-        creatorDepartmentID
+        departmentID
       ]
     );
 
-    res.json({
-      message: "CoAdmin created successfully"
-    });
+    res.json({ message: "CoAdmin created successfully" });
 
   } catch (err) {
-    console.error(err);
+    console.error("CREATE COADMIN ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -78,31 +63,33 @@ exports.createAdmin = async (req, res) => {
 
 exports.getAdmins = async (req, res) => {
   try {
-    const departmentID = req.user.departmentID;
-    const role = req.user.role;
-
-    if (role !== "Admin") {
+    if (req.user.role !== "Admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    if (!departmentID) {
-      return res.status(400).json({
-        message: "Admin has no department assigned"
-      });
-    }
+    const departmentID = req.user.departmentID;
 
-    const [coadmins] = await db.query(
-      `SELECT userID, fullName, email, role
-       FROM users
-       WHERE departmentID = ?
-       AND role = 'CoAdmin'`,
-      [departmentID]
-    );
+    const [coadmins] = await db.query(`
+      SELECT 
+        userID,
+        CONCAT(
+          firstName,
+          IF(middleName IS NOT NULL AND middleName != '', CONCAT(' ', middleName), ''),
+          ' ',
+          lastName
+        ) AS fullName,
+        email,
+        role
+      FROM users
+      WHERE departmentID = ?
+      AND role = 'CoAdmin'
+      AND isDeleted = FALSE
+    `, [departmentID]);
 
     res.json(coadmins);
 
   } catch (err) {
-    console.error(err);
+    console.error("GET COADMINS ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -117,37 +104,20 @@ exports.getAdmins = async (req, res) => {
 exports.deleteAdmin = async (req, res) => {
   try {
     const { userID } = req.params;
-    const departmentID = req.user.departmentID;
-    const role = req.user.role;
 
-    if (role !== "Admin") {
+    if (req.user.role !== "Admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    // Check if user exists in same department and is CoAdmin
-    const [user] = await db.query(
-      `SELECT * FROM users
-       WHERE userID = ?
-       AND departmentID = ?
-       AND role = 'CoAdmin'`,
-      [userID, departmentID]
-    );
-
-    if (user.length === 0) {
-      return res.status(404).json({
-        message: "CoAdmin not found"
-      });
-    }
-
     await db.query(
-      "DELETE FROM users WHERE userID = ?",
+      "UPDATE users SET isDeleted = TRUE WHERE userID = ? AND role = 'CoAdmin'",
       [userID]
     );
 
     res.json({ message: "CoAdmin deleted successfully" });
 
   } catch (err) {
-    console.error(err);
+    console.error("DELETE COADMIN ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
