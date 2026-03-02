@@ -291,7 +291,7 @@ exports.deleteAdmin = async (req, res) => {
       return res.status(404).json({ message: "Admin not found" });
     }
 
-    res.json({ message: "Admin soft deleted successfully" });
+    res.json({ message: "Admin deleted successfully" });
 
   } catch (err) {
     console.error("SOFT DELETE ADMIN ERROR:", err);
